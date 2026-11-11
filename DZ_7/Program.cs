@@ -109,7 +109,7 @@ namespace BankApp
             acc1.PrintInfo();
             acc2.PrintInfo();
             acc3.PrintInfo();
-
+            
             acc1.Transfer(acc2, 300m);
             acc1.PrintInfo();
             acc2.PrintInfo();
