@@ -1,126 +1,77 @@
 ﻿using System;
-namespace BankApp
+using System.Collections.Generic;
+
+namespace Homework8_2
 {
-    public enum AccountType
+    class Song
     {
-        Current,
-        Savings
-    }
-    public class BankAccount
-    {
-        private static int lastAccountNumber = 0;
+        string name;
+        string author;
+        public Song prev;
 
-        private static int GenerateAccountNumber()
-        {
-            lastAccountNumber++;
-            return lastAccountNumber;
-        }
-        private string account_number;
-        private decimal balance;
-        private AccountType type;
-        public BankAccount(decimal initialBalance, AccountType accType)
-        {
-            account_number = GenerateAccountNumber().ToString();
-            Balance = initialBalance;
-            Type = accType;
-        }
-        public string AccountNumber
-        {
-            get { return account_number; }
-        }
-        public decimal Balance
-        {
-            get { return balance; }
-            set
-            {
-                if (value >= 0)
-                    balance = value;
-                else
-                    Console.WriteLine("Ошибка: баланс не может быть отрицательным!");
-            }
-        }
-        public AccountType Type
-        {
-            get { return type; }
-            set { type = value; }
-        }
-        public void Deposit(decimal amount)
-        {
-            if (amount > 0)
-            {
-                Balance += amount;
-                Console.WriteLine($"Счет {AccountNumber} пополнен на {amount} руб.");
-            }
-            else
-            {
-                Console.WriteLine("Ошибка: сумма пополнения должна быть больше нуля.");
-            }
-        }
-        public void Withdraw(decimal amount)
-        {
-            if (amount <= 0)
-            {
-                Console.WriteLine("Ошибка: сумма снятия должна быть больше нуля.");
-            }
-            else if (amount > Balance)
-            {
-                Console.WriteLine("Ошибка: недостаточно средств на счете.");
-            }
-            else
-            {
-                Balance -= amount;
-                Console.WriteLine($"Со счета {AccountNumber} успешно снято {amount} руб.");
-            }
-        }
-        public void Transfer(BankAccount targetAccount, decimal amount)
-        {
-            Console.WriteLine($"\n--- Попытка перевода {amount} руб. со счета {this.AccountNumber} на счет {targetAccount.AccountNumber} ---");
+        public void SetName(string name) { this.name = name; }
+        public void SetAuthor(string author) { this.author = author; }
+        public void SetPrev(Song prev) { this.prev = prev; }
 
-            if (amount <= 0)
-            {
-                Console.WriteLine("Ошибка: сумма перевода должна быть больше нуля.");
-                return;
-            }
-
-            if (amount > Balance)
-            {
-                Console.WriteLine("Ошибка: недостаточно средств для перевода.");
-                return;
-            }
-            Withdraw(amount);
-            targetAccount.Deposit(amount);
-
-            Console.WriteLine($"Перевод {amount} руб. выполнен успешно.");
-        }
         public void PrintInfo()
         {
-            Console.WriteLine($"[Счет {AccountNumber}] Баланс: {Balance} руб. | Тип: {Type}");
+            Console.WriteLine($"Песня: '{name}', Исполнитель: {author}");
+        }
+
+        public string Title()
+        {
+            return $"{name} - {author}";
+        }
+
+        public override bool Equals(object d)
+        {
+            if (d == null) return false;
+            if (d is Song otherSong)
+            {
+                return this.name == otherSong.name && this.author == otherSong.author;
+            }
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(name, author);
         }
     }
+
     class Program
     {
         static void Main(string[] args)
         {
-            BankAccount acc1 = new BankAccount(1000m, AccountType.Savings);
-            BankAccount acc2 = new BankAccount(500m, AccountType.Current);
-            BankAccount acc3 = new BankAccount(0m, AccountType.Savings);
+            List<Song> playlist = new List<Song>();
 
-            Console.WriteLine("=== Начальное состояние счетов ===");
-            acc1.PrintInfo();
-            acc2.PrintInfo();
-            acc3.PrintInfo();
+            Song song1 = new Song(); song1.SetName("Династия"); song1.SetAuthor("madk1d");
+            Song song2 = new Song(); song2.SetName("Морем"); song2.SetAuthor("АлоэВера");
+            Song song3 = new Song(); song3.SetName("Колыбельная"); song3.SetAuthor("milkovsky");
+            Song song4 = new Song(); song4.SetName("Династия"); song4.SetAuthor("madk1d");
 
-            acc1.Transfer(acc2, 300m);
-            acc1.PrintInfo();
-            acc2.PrintInfo();
+            playlist.Add(song1);
+            playlist.Add(song2);
+            playlist.Add(song3);
+            playlist.Add(song4);
 
-            acc2.Transfer(acc3, 5000m);
-            acc2.PrintInfo();
-            acc3.PrintInfo();
+            Console.WriteLine("=== Плейлист ===");
+            foreach (Song s in playlist)
+            {
+                s.PrintInfo();
+            }
 
-            acc1.Transfer(acc3, -100m);
-            acc1.PrintInfo();
-            acc3.PrintInfo();
+            Console.WriteLine("\n=== Сравнение 1-й и 2-й песни ===");
+            if (playlist[0].Equals(playlist[1]))
+                Console.WriteLine("Одинаковые песни");
+            else
+                Console.WriteLine("Разные песни");
+
+            Console.WriteLine("\n=== Сравнение 1-й и 4-й песни ===");
+            if (playlist[0].Equals(playlist[3]))
+                Console.WriteLine("Одинаковые песни");
+            else
+                Console.WriteLine("Разные песни");
         }
     }
 }
