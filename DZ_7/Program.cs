@@ -1,126 +1,144 @@
 ﻿using System;
-namespace BankApp
+using System.Collections.Generic;
+
+namespace CompanyHierarchy
 {
-    public enum AccountType
+    class Employee
     {
-        Current,
-        Savings
-    }
-    public class BankAccount
-    {
-        private static int lastAccountNumber = 0;
+        public string Name { get; set; }
+        public string Position { get; set; }
 
-        private static int GenerateAccountNumber()
+        public Employee(string name, string position)
         {
-            lastAccountNumber++;
-            return lastAccountNumber;
+            Name = name;
+            Position = position;
         }
-        private string account_number;
-        private decimal balance;
-        private AccountType type;
-        public BankAccount(decimal initialBalance, AccountType accType)
+
+        public virtual void PrintInfo()
         {
-            account_number = GenerateAccountNumber().ToString();
-            Balance = initialBalance;
-            Type = accType;
+            Console.WriteLine($"{Position}: {Name}");
         }
-        public string AccountNumber
+    }
+
+    // Класс Начальника (умеет давать задачи)
+    class Manager : Employee
+    {
+        public List<Employee> Subordinates { get; set; } = new List<Employee>();
+
+        public Manager(string name, string position) : base(name, position) { }
+
+        public void AddSubordinate(Employee emp)
         {
-            get { return account_number; }
+            Subordinates.Add(emp);
         }
-        public decimal Balance
+
+        // Метод постановки задачи
+        public void AssignTask(string taskName, Employee targetEmployee)
         {
-            get { return balance; }
-            set
+            Console.WriteLine($"\n[Процесс] {Name} ({Position}) ставит задачу: '{taskName}' для {targetEmployee.Name}...");
+
+            // Проверяем, есть ли этот сотрудник в прямом подчинении
+            bool isDirectSubordinate = false;
+            foreach (var sub in Subordinates)
             {
-                if (value >= 0)
-                    balance = value;
-                else
-                    Console.WriteLine("Ошибка: баланс не может быть отрицательным!");
+                if (sub == targetEmployee)
+                {
+                    isDirectSubordinate = true;
+                    break;
+                }
             }
-        }
-        public AccountType Type
-        {
-            get { return type; }
-            set { type = value; }
-        }
-        public void Deposit(decimal amount)
-        {
-            if (amount > 0)
+
+            if (isDirectSubordinate)
             {
-                Balance += amount;
-                Console.WriteLine($"Счет {AccountNumber} пополнен на {amount} руб.");
+                // прямой подчиненный
+                Console.WriteLine($"-> УСПЕХ: {targetEmployee.Name} берет задачу '{taskName}'.");
             }
             else
             {
-                Console.WriteLine("Ошибка: сумма пополнения должна быть больше нуля.");
-            }
-        }
-        public void Withdraw(decimal amount)
-        {
-            if (amount <= 0)
-            {
-                Console.WriteLine("Ошибка: сумма снятия должна быть больше нуля.");
-            }
-            else if (amount > Balance)
-            {
-                Console.WriteLine("Ошибка: недостаточно средств на счете.");
-            }
-            else
-            {
-                Balance -= amount;
-                Console.WriteLine($"Со счета {AccountNumber} успешно снято {amount} руб.");
-            }
-        }
-        public void Transfer(BankAccount targetAccount, decimal amount)
-        {
-            Console.WriteLine($"\n--- Попытка перевода {amount} руб. со счета {this.AccountNumber} на счет {targetAccount.AccountNumber} ---");
+                // Если не прямой, ищем, через кого передать
+                bool delegated = false;
+                foreach (var sub in Subordinates)
+                {
+                    if (sub is Manager managerSub)
+                    {
+                        // Если подчиненный - тоже менеджер, пробуем передать через него
+                        managerSub.AssignTask(taskName, targetEmployee);
+                        delegated = true;
+                        break;
+                    }
+                }
 
-            if (amount <= 0)
-            {
-                Console.WriteLine("Ошибка: сумма перевода должна быть больше нуля.");
-                return;
+                if (!delegated)
+                {
+                    Console.WriteLine($"-> ОТКАЗ: {Name} не может дать задачу {targetEmployee.Name} напрямую (нет в подчинении).");
+                }
             }
-
-            if (amount > Balance)
-            {
-                Console.WriteLine("Ошибка: недостаточно средств для перевода.");
-                return;
-            }
-            Withdraw(amount);
-            targetAccount.Deposit(amount);
-
-            Console.WriteLine($"Перевод {amount} руб. выполнен успешно.");
-        }
-        public void PrintInfo()
-        {
-            Console.WriteLine($"[Счет {AccountNumber}] Баланс: {Balance} руб. | Тип: {Type}");
         }
     }
+
     class Program
     {
         static void Main(string[] args)
         {
-            BankAccount acc1 = new BankAccount(1000m, AccountType.Savings);
-            BankAccount acc2 = new BankAccount(500m, AccountType.Current);
-            BankAccount acc3 = new BankAccount(0m, AccountType.Savings);
+            Manager timur = new Manager("Тимур", "Генеральный директор");
 
-            Console.WriteLine("=== Начальное состояние счетов ===");
-            acc1.PrintInfo();
-            acc2.PrintInfo();
-            acc3.PrintInfo();
+            Manager rashid = new Manager("Рашид", "Финансовый директор");
+            Manager lukas = new Manager("Лукас", "Главный бухгалтер");
 
-            acc1.Transfer(acc2, 300m);
-            acc1.PrintInfo();
-            acc2.PrintInfo();
+            Manager oilham = new Manager("ОИльхам", "Директор по автоматизации");
+            Manager orkadiy = new Manager("Оркадий", "Начальник инф систем");
+            Manager volodya = new Manager("Володя", "Зам начальника");
 
-            acc2.Transfer(acc3, 5000m);
-            acc2.PrintInfo();
-            acc3.PrintInfo();
+            Manager ilshat = new Manager("Ильшат", "Главный в секторе системщиков");
+            Manager ilya = new Manager("Илья", "Сотрудник");
+            Manager vitya = new Manager("Витя", "Сотрудник");
+            Manager zhenya = new Manager("Женя", "Сотрудник");
 
-            acc1.Transfer(acc3, -100m);
-            acc1.PrintInfo();
-            acc3.PrintInfo();
+            Manager sergey = new Manager("Сергей", "Главный в секторе разработчиков");
+            Manager laysan = new Manager("Лайсан", "Зам");
+            Employee marat = new Employee("Марат", "Разработчик");
+            Employee dina = new Employee("Дина", "Разработчик");
+            Employee ildar = new Employee("Ильдар", "Разработчик");
+            Employee anton = new Employee("Антон", "Разработчик");
+
+            // 2. Строим связи
+            timur.AddSubordinate(rashid);
+            timur.AddSubordinate(oilham);
+
+            rashid.AddSubordinate(lukas);
+
+            oilham.AddSubordinate(orkadiy);
+            orkadiy.AddSubordinate(volodya);
+
+            volodya.AddSubordinate(ilshat);
+            volodya.AddSubordinate(sergey);
+
+            ilshat.AddSubordinate(ilya);
+            ilshat.AddSubordinate(vitya);
+            ilshat.AddSubordinate(zhenya);
+
+            sergey.AddSubordinate(laysan);
+            laysan.AddSubordinate(marat);
+            laysan.AddSubordinate(dina);
+            laysan.AddSubordinate(ildar);
+            laysan.AddSubordinate(anton);
+
+            
+            Console.WriteLine("=== ТЕСТ 1: Прямое подчинение ===");
+            // прямой подчиненный
+            timur.AssignTask("Подготовить финансовый отчет", rashid);
+
+            Console.WriteLine("\n=== ТЕСТ 2: Задача через цепочку ===");
+            // Илья не прямой подчиненный Оркадия, он подчиненный Ильшата
+            orkadiy.AssignTask("Починить сервер", ilya);
+
+            Console.WriteLine("\n=== ТЕСТ 3: Задача через длинную цепочку ===");
+            // Тимур ставит задачу Марине (через 5 уровней)
+            timur.AssignTask("Написать новый модуль", marat);
+
+            Console.WriteLine("\n=== ТЕСТ 4: Нарушение иерархии ===");
+            // Ильшат пытается дать задачу Дина (она в другом отделе)
+            ilshat.AssignTask("Проверить сеть", dina);
         }
     }
 }
